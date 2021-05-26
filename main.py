@@ -14,7 +14,7 @@ def get_template_as_string():
 async def invoke_lambda():
     async with aiohttp.ClientSession() as session:
         response = await session.post(
-            url='https://7t7ydn531j.execute-api.us-west-1.amazonaws.com/pythonLambda',
+            url='https://9u2x0vg65b.execute-api.us-west-1.amazonaws.com/default/',
             data={
                 'some_data': 'some_data'
             }
@@ -27,7 +27,7 @@ async def main():
     cloudformation_response = cloudformationClient.create_stack(
         StackName='sqs-lambda-stack',
         TemplateBody=get_template_as_string(),
-        OnFailure='DO_NOTHING',
+        OnFailure='DELETE',
         TimeoutInMinutes=5,
         Capabilities=['CAPABILITY_NAMED_IAM']
     )
@@ -43,6 +43,7 @@ async def main():
         invoke_lambda(),
         invoke_lambda(),
     )
+    print(responses)
 
 
 if __name__ == "__main__":

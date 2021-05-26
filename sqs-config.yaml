@@ -57,6 +57,41 @@ Resources:
                 Resource: !Sub ${SourceQue.Arn}
       Description: "Allows to execute lambda function and send message to SQS"
       RoleName: "pythonLambdaSQSRole"
+  APIGateWayForLambda:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Description: "ApiGateway to invoke lambda via API"
+      Name: "LambdaAPIInvoke"
+      Parameters:
+        Key: Value
+  apiGatewayRootMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: 'POST'
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        Uri: !Sub
+          - arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${lambdaArn}/invocations
+          - lambdaArn: !GetAtt MyLambdaFunction.Arn
+      ResourceId: !GetAtt APIGateWayForLambda.RootResourceId
+      RestApiId: !Ref APIGateWayForLambda
+  apiGatewayDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn:
+      - apiGatewayRootMethod
+    Properties:
+      RestApiId: !Ref APIGateWayForLambda
+      StageName: default
+  lambdaApiGatewayInvoke:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt MyLambdaFunction.Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${APIGateWayForLambda}/default/POST/
+
 
 Outputs:
   SourceQueueURL:
