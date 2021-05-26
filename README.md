@@ -1,0 +1,1 @@
+# Cloudformation stack for SQS and PythonLambda

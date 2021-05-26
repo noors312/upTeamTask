@@ -1,0 +1,81 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Some description"
+Resources:
+  SourceQue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: "SampleQueue"
+      RedrivePolicy:
+        deadLetterTargetArn:
+          Fn::GetAtt:
+            - "DeadLetterQueue"
+            - "Arn"
+        maxReceiveCount: 1
+  DeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: "DeadLetterQueue"
+  MyLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: noors
+        S3Key: main.zip
+      Description: "Some description"
+      Environment:
+        Variables:
+          SQS_URL:
+            Ref: "SourceQue"
+      FunctionName: "pythonLambda"
+      Handler: "main.main"
+      MemorySize: 128
+      Role:
+        Fn::GetAtt:
+          - "PythonLambdaRole"
+          - "Arn"
+      Runtime: "python3.7"
+      Timeout: 10
+  PythonLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Path: '/'
+      Policies:
+        - PolicyName: LambdaSQSAccess
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: SQS:*
+                Resource: !Sub ${SourceQue.Arn}
+      Description: "Allows to execute lambda function and send message to SQS"
+      RoleName: "pythonLambdaSQSRole"
+
+Outputs:
+  SourceQueueURL:
+    Description: "URL of source queue"
+    Value:
+      Ref: "SourceQue"
+  SourceQueueARN:
+    Description: "ARN of source queue"
+    Value:
+      Fn::GetAtt:
+        - "SourceQue"
+        - "Arn"
+  DeadLetterQueueURL:
+    Description: "URL of dead-letter queue"
+    Value:
+      Ref: "DeadLetterQueue"
+  DeadLetterQueueARN:
+    Description: "ARN of dead-letter queue"
+    Value:
+      Fn::GetAtt:
+        - "DeadLetterQueue"
+        - "Arn"
