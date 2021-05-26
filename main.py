@@ -1,7 +1,5 @@
 import asyncio
-import time
 
-import aiohttp
 import boto3
 
 
@@ -13,9 +11,11 @@ def get_template_as_string():
 
 async def invoke_lambda():
     lambdaClient = boto3.client('lambda')
-    await lambdaClient.invoke_async(
-        FunctionName='pythonLambda'
+    response = lambdaClient.invoke_async(
+        FunctionName='pythonLambda',
+        InvokeArgs=b'{"some_data":"some_data"}'
     )
+    return response
 
 
 async def main():
@@ -27,19 +27,28 @@ async def main():
         TimeoutInMinutes=5,
         Capabilities=['CAPABILITY_NAMED_IAM']
     )
-    time.sleep(30)
-    responses = await asyncio.gather(
-        invoke_lambda(),
-        invoke_lambda(),
-        invoke_lambda(),
-        invoke_lambda(),
-        invoke_lambda(),
-        invoke_lambda(),
-        invoke_lambda(),
-        invoke_lambda(),
-        invoke_lambda(),
-    )
-    print(responses)
+    lambdaClient = boto3.client('lambda')
+    while True:
+        try:
+            lambdaClient.get_function(
+                FunctionName='pythonLambda'
+            )
+            responses = await asyncio.gather(
+                invoke_lambda(),
+                invoke_lambda(),
+                invoke_lambda(),
+                invoke_lambda(),
+                invoke_lambda(),
+                invoke_lambda(),
+                invoke_lambda(),
+                invoke_lambda(),
+                invoke_lambda(),
+            )
+            print(responses)
+            break
+        except:
+            print('No function')
+            continue
 
 
 if __name__ == "__main__":
