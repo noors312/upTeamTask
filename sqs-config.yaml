@@ -27,7 +27,7 @@ Resources:
           SQS_URL:
             Ref: "SourceQue"
       FunctionName: "pythonLambda"
-      Handler: "main.main"
+      Handler: "lambdaFunction.main"
       MemorySize: 128
       Role:
         Fn::GetAtt:

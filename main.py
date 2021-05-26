@@ -12,14 +12,10 @@ def get_template_as_string():
 
 
 async def invoke_lambda():
-    async with aiohttp.ClientSession() as session:
-        response = await session.post(
-            url='https://9u2x0vg65b.execute-api.us-west-1.amazonaws.com/default/',
-            data={
-                'some_data': 'some_data'
-            }
-        )
-        return response
+    lambdaClient = boto3.client('lambda')
+    await lambdaClient.invoke_async(
+        FunctionName='pythonLambda'
+    )
 
 
 async def main():
@@ -31,7 +27,7 @@ async def main():
         TimeoutInMinutes=5,
         Capabilities=['CAPABILITY_NAMED_IAM']
     )
-    time.sleep(10)
+    time.sleep(30)
     responses = await asyncio.gather(
         invoke_lambda(),
         invoke_lambda(),
